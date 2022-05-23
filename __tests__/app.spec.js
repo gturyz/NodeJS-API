@@ -52,4 +52,50 @@ describe("Mon API crud", () => {
     const res = await request(app).delete("/api/task/1").expect(204);
     expect(db.tasks.memoryDb.get(1)).toBeUndefined();
   });
+
+  it.each([{ username: "PasdeMotpasse" }, { motdepasse: "PasdeName" }])(
+    "POST /signup devrait refuser %p sans l'insérer.",
+    async (invalidObject) => {
+      const idDébutTest = db.users.id;
+      const result = await request(app)
+        .post("/signup")
+        .send(invalidObject)
+        .expect(400);
+      const idFinTest = db.users.id;
+      expect(idFinTest).toBe(idDébutTest);
+    }
+  );
+
+  it("POST /signup devrait être ajouté à la base de données et retourner username sans motdepasse", async () => {
+    const result = await request(app)
+      .post("/signup")
+      .send({
+        username: "Deadpool",
+        motdepasse: "secret1234",
+        email: "deadpool@gmail.com",
+      })
+      .expect(201);
+    expect(result.body).toEqual({
+      username: "Deadpool",
+      email: "deadpool@gmail.com",
+    });
+  });
+
+  it("POST /signup doit être ajouté à la BD avec le motdepasse haché", async () => {
+    const result = await request(app)
+      .post("/signup")
+      .send({
+        username: "Geralt",
+        motdepasse: "secret1234",
+        email: "geralt@gmail.com",
+      })
+      .expect(201);
+
+    const { id, found: account } = db.users.findByProperty(
+      "username",
+      "Geralt"
+    );
+    const hashedPassword = account.motdepasse;
+    expect(hashedPassword).not.toMatch(/secret1234/);
+  });
 });
