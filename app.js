@@ -7,12 +7,12 @@ const app = express();
 app.use(express.json());
 
 app.get("/api/tasks", (req, res) => {
-  res.json(db.getAll());
+  res.json(db.tasks.getAll());
 });
 
 app.get("/api/task/:id", (req, res) => {
   let id = parseInt(req.params.id);
-  res.json(db.memoryDb.get(id));
+  res.json(db.tasks.memoryDb.get(id));
 });
 
 app.post("/api/tasks", (req, res) => {
@@ -25,7 +25,7 @@ app.post("/api/tasks", (req, res) => {
   const { value, error } = schema.validate(payload);
   if (error) res.status(400).send({ erreur: error.details[0].message });
 
-  db.insertOne(value);
+  db.tasks.insertOne(value);
 
   res.status(201).json(payload);
 });
@@ -41,7 +41,7 @@ app.put("/api/task/:id", (req, res) => {
   const { value, error } = schema.validate(payload);
   if (error) res.status(400).send({ erreur: error.details[0].message });
 
-  db.updateOne(id, payload);
+  db.tasks.updateOne(id, payload);
 
   res.status(204).send();
 });
@@ -49,7 +49,7 @@ app.put("/api/task/:id", (req, res) => {
 app.delete("/api/task/:id", (req, res) => {
   let id = parseInt(req.params.id);
 
-  db.deleteOne(id);
+  db.tasks.deleteOne(id);
 
   res.status(204).send();
 });
