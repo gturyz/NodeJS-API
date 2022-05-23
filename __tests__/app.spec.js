@@ -47,4 +47,10 @@ describe("Mon API crud", () => {
       .expect(204);
     expect(modification).toMatchObject(db.memoryDb.get(1));
   });
+
+  it("DELETE /api/task/:id supprime l'objet correspondant en DB", async () => {
+    const res = await request(app).delete("/api/task/1").expect(204);
+    console.log(db.memoryDb.get(1));
+    expect(db.memoryDb.get(1)).toBeUndefined();
+  });
 });
