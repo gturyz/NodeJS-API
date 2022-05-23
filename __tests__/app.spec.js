@@ -27,30 +27,57 @@ describe("Mon API crud", () => {
     expect(JSON.parse(res.text)).toMatchObject(db.tasks.memoryDb.get(1));
   });
 
-  it("POST /api/tasks doit créer un nouvel objet en BDD et le retourner", async () => {
-    let insertion = { description: "Insertion", faite: false };
-    let id = db.tasks.id;
-    const res = await request(app)
-      .post("/api/tasks")
-      .send(insertion)
-      .expect(201)
-      .expect("content-type", /json/);
+  describe("Modification de la base de donnée POST/PUT/DELETE", () => {
+    let token;
 
-    expect(db.tasks.memoryDb.get(id)).toMatchObject(insertion);
-  });
+    beforeAll(async () => {
+      db.users.memoryDb = new Map();
+      db.users.id = 0;
 
-  it("PUT /api/task/:id modifie l'objet correspondant en DB", async () => {
-    let modification = { description: "Modified", faite: true };
-    const res = await request(app)
-      .put("/api/task/1")
-      .send(modification)
-      .expect(204);
-    expect(modification).toMatchObject(db.tasks.memoryDb.get(1));
-  });
+      await request(app).post("/signup").send({
+        email: "test@gmail.com",
+        username: "Test",
+        motdepasse: "secret1234",
+      });
 
-  it("DELETE /api/task/:id supprime l'objet correspondant en DB", async () => {
-    const res = await request(app).delete("/api/task/1").expect(204);
-    expect(db.tasks.memoryDb.get(1)).toBeUndefined();
+      const res = await request(app)
+        .post("/signin")
+        .send({ email: "test@gmail.com", motdepasse: "secret1234" });
+      // .end((err, response) => {
+      token = res.headers["x-auth-token"];
+      // });
+    });
+
+    it("POST /api/tasks doit créer un nouvel objet en BDD et le retourner", async () => {
+      let insertion = { description: "Insertion", faite: false };
+      let id = db.tasks.id;
+      const res = await request(app)
+        .post("/api/tasks")
+        .set("Authorization", `Bearer ${token}`)
+        .send(insertion)
+        .expect(201)
+        .expect("content-type", /json/);
+
+      expect(db.tasks.memoryDb.get(id)).toMatchObject(insertion);
+    });
+
+    it("PUT /api/task/:id modifie l'objet correspondant en DB", async () => {
+      let modification = { description: "Modified", faite: true };
+      const res = await request(app)
+        .put("/api/task/1")
+        .set("Authorization", `Bearer ${token}`)
+        .send(modification)
+        .expect(204);
+      expect(modification).toMatchObject(db.tasks.memoryDb.get(1));
+    });
+
+    it("DELETE /api/task/:id supprime l'objet correspondant en DB", async () => {
+      const res = await request(app)
+        .delete("/api/task/1")
+        .set("Authorization", `Bearer ${token}`)
+        .expect(204);
+      expect(db.tasks.memoryDb.get(1)).toBeUndefined();
+    });
   });
 
   it.each([{ username: "PasdeMotpasse" }, { motdepasse: "PasdeName" }])(
@@ -101,13 +128,11 @@ describe("Mon API crud", () => {
 
   it("POST /signin ne doit pas accepter les connexions à un compte existant mais avec le mauvais mot de passe", async () => {
     // ATTENTION ici test@gmail.com ne doit pas exister sinon erreur non lié au code.
-    const inscription = await request(app)
-      .post("/signup")
-      .send({
-        email: "test@gmail.com",
-        username: "Test",
-        motdepasse: "secret1234",
-      });
+    const inscription = await request(app).post("/signup").send({
+      email: "test@gmail.com",
+      username: "Test",
+      motdepasse: "secret1234",
+    });
 
     const connexion = await request(app)
       .post("/signin")
