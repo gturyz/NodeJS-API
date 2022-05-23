@@ -46,4 +46,12 @@ app.put("/api/task/:id", (req, res) => {
   res.status(204).send();
 });
 
+app.delete("/api/task/:id", (req, res) => {
+  let id = parseInt(req.params.id);
+
+  db.deleteOne(id);
+
+  res.status(204).send();
+});
+
 module.exports = app;
