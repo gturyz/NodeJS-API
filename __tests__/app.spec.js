@@ -6,9 +6,9 @@ describe("Mon API crud", () => {
   beforeEach(() => {
     db.tasks.memoryDb = new Map();
     db.tasks.id = 0;
-    db.tasks.insertOne({ description: "Alice", faite: false });
-    db.tasks.insertOne({ description: "Bob", faite: true });
-    db.tasks.insertOne({ description: "Charlie", faite: true });
+    db.tasks.insertOne({ description: "Alice", faite: false, crééePar: 2 });
+    db.tasks.insertOne({ description: "Bob", faite: true, crééePar: 0 });
+    db.tasks.insertOne({ description: "Charlie", faite: true, crééePar: 1 });
   });
 
   it("GET /api/tasks retourne JSON de la database", async () => {
@@ -30,7 +30,7 @@ describe("Mon API crud", () => {
   describe("Modification de la base de donnée POST/PUT/DELETE", () => {
     let token;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       db.users.memoryDb = new Map();
       db.users.id = 0;
 

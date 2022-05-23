@@ -19,18 +19,19 @@ if (!process.env.JWT_PRIVATE_KEY) {
 app.use(express.json());
 
 function authGuard(req, res, next) {
-  const token = req.header("x-auth-token");
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
   if (!token)
     return res.status(401).json({ erreur: "Vous devez vous connecter" });
 
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET_KEY);
-    req.user = decoded;
-    console.log(decoded);
+  jwt.verify(token, process.env.JWT_PRIVATE_KEY, (err, user) => {
+    if (err) return res.status(400).json({ erreur: "Token Invalide" });
+
+    req.user = user;
+
     next();
-  } catch (exc) {
-    return res.status(400).json({ erreur: "Token Invalide" });
-  }
+  });
 }
 
 app.post("/signup", async (req, res) => {
@@ -136,10 +137,11 @@ app.delete("/api/task/:id", [authGuard], (req, res) => {
   let id = parseInt(req.params.id);
 
   const user = req.user;
-  const task = db.tasks.get(id);
+  const task = db.tasks.memoryDb.get(id);
 
-  if (user.id !== task.crééePar)
+  if (user.id !== task["crééePar"]) {
     res.status(400).send({ erreur: "Cette tâche ne vous appartient pas" });
+  }
 
   db.tasks.deleteOne(id);
 
