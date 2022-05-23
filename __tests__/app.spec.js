@@ -26,4 +26,16 @@ describe("Mon API crud", () => {
       .expect("content-type", /json/);
     expect(JSON.parse(res.text)).toMatchObject(db.memoryDb.get(1));
   });
+
+  it("POST /api/tasks doit créer un nouvel objet en BDD et le retourner", async () => {
+    let insertion = { description: "Insertion", faite: false };
+    let id = db.id;
+    const res = await request(app)
+      .post("/api/tasks")
+      .send(insertion)
+      .expect(201)
+      .expect("content-type", /json/);
+
+    expect(db.memoryDb.get(id)).toMatchObject(insertion);
+  });
 });
