@@ -18,6 +18,21 @@ if (!process.env.JWT_PRIVATE_KEY) {
 
 app.use(express.json());
 
+function authGuard(req, res, next) {
+  const token = req.header("x-auth-token");
+  if (!token)
+    return res.status(401).json({ erreur: "Vous devez vous connecter" });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET_KEY);
+    req.user = decoded;
+    console.log(decoded);
+    next();
+  } catch (exc) {
+    return res.status(400).json({ erreur: "Token Invalide" });
+  }
+}
+
 app.post("/signup", async (req, res) => {
   const payload = req.body;
   const schema = Joi.object({
@@ -83,8 +98,9 @@ app.get("/api/task/:id", (req, res) => {
   res.json(db.tasks.memoryDb.get(id));
 });
 
-app.post("/api/tasks", (req, res) => {
+app.post("/api/tasks", [authGuard], (req, res) => {
   const payload = req.body;
+  const user = req.user;
 
   const schema = Joi.object({
     description: Joi.string().required(),
@@ -93,12 +109,14 @@ app.post("/api/tasks", (req, res) => {
   const { value, error } = schema.validate(payload);
   if (error) res.status(400).send({ erreur: error.details[0].message });
 
+  value.crééePar = user.id;
+
   db.tasks.insertOne(value);
 
   res.status(201).json(payload);
 });
 
-app.put("/api/task/:id", (req, res) => {
+app.put("/api/task/:id", [authGuard], (req, res) => {
   let id = parseInt(req.params.id);
   const payload = req.body;
 
@@ -114,8 +132,14 @@ app.put("/api/task/:id", (req, res) => {
   res.status(204).send();
 });
 
-app.delete("/api/task/:id", (req, res) => {
+app.delete("/api/task/:id", [authGuard], (req, res) => {
   let id = parseInt(req.params.id);
+
+  const user = req.user;
+  const task = db.tasks.get(id);
+
+  if (user.id !== task.crééePar)
+    res.status(400).send({ erreur: "Cette tâche ne vous appartient pas" });
 
   db.tasks.deleteOne(id);
 
