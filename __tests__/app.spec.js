@@ -38,4 +38,13 @@ describe("Mon API crud", () => {
 
     expect(db.memoryDb.get(id)).toMatchObject(insertion);
   });
+
+  it("PUT /api/task/:id modifie l'objet correspondant en DB", async () => {
+    let modification = { description: "Modified", faite: true };
+    const res = await request(app)
+      .put("/api/task/1")
+      .send(modification)
+      .expect(204);
+    expect(modification).toMatchObject(db.memoryDb.get(1));
+  });
 });
