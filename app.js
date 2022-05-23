@@ -15,4 +15,9 @@ app.get("/api/tasks", (req, res) => {
   res.json(db.getAll());
 });
 
+app.get("/api/task/:id", (req, res) => {
+  let id = parseInt(req.params.id);
+  res.json(db.memoryDb.get(id));
+});
+
 module.exports = app;
