@@ -43,6 +43,37 @@ app.post("/signup", async (req, res) => {
   });
 });
 
+app.post("/signin", async (req, res) => {
+  const payload = req.body;
+  const schema = Joi.object({
+    email: Joi.string().required().email(),
+    motdepasse: Joi.string().required(),
+  });
+
+  const { value: connexion, error } = schema.validate(payload);
+
+  if (error) return res.status(400).send({ erreur: error.details[0].message });
+
+  const { id, found: account } = db.users.findByProperty(
+    "email",
+    connexion.email
+  );
+  if (!account) return res.status(400).send({ erreur: "Email Invalide" });
+
+  const passwordIsValid = await bcrypt.compare(
+    req.body.motdepasse,
+    account.motdepasse
+  );
+  if (!passwordIsValid)
+    return res.status(400).send({ erreur: "Mot de Passe Invalide" });
+
+  const token = jwt.sign({ id }, process.env.JWT_PRIVATE_KEY);
+  res
+    .header("x-auth-token", token)
+    .status(200)
+    .send({ username: account.username });
+});
+
 app.get("/api/tasks", (req, res) => {
   res.json(db.tasks.getAll());
 });
