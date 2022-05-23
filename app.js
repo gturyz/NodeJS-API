@@ -30,4 +30,20 @@ app.post("/api/tasks", (req, res) => {
   res.status(201).json(payload);
 });
 
+app.put("/api/task/:id", (req, res) => {
+  let id = parseInt(req.params.id);
+  const payload = req.body;
+
+  const schema = Joi.object({
+    description: Joi.string().required(),
+    faite: Joi.boolean().required(),
+  });
+  const { value, error } = schema.validate(payload);
+  if (error) res.status(400).send({ erreur: error.details[0].message });
+
+  db.updateOne(id, payload);
+
+  res.status(204).send();
+});
+
 module.exports = app;
