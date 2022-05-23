@@ -18,4 +18,12 @@ describe("Mon API crud", () => {
       .expect("content-type", /json/);
     expect(JSON.parse(res.text)).toMatchObject(db.getAll());
   });
+
+  it("GET /api/task/:id retourne le JSON de l'objet correspondant en DB", async () => {
+    const res = await request(app)
+      .get("/api/task/1")
+      .expect(200)
+      .expect("content-type", /json/);
+    expect(JSON.parse(res.text)).toMatchObject(db.memoryDb.get(1));
+  });
 });
