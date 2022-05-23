@@ -98,4 +98,20 @@ describe("Mon API crud", () => {
     const hashedPassword = account.motdepasse;
     expect(hashedPassword).not.toMatch(/secret1234/);
   });
+
+  it("POST /signin ne doit pas accepter les connexions à un compte existant mais avec le mauvais mot de passe", async () => {
+    // ATTENTION ici test@gmail.com ne doit pas exister sinon erreur non lié au code.
+    const inscription = await request(app)
+      .post("/signup")
+      .send({
+        email: "test@gmail.com",
+        username: "Test",
+        motdepasse: "secret1234",
+      });
+
+    const connexion = await request(app)
+      .post("/signin")
+      .send({ email: "test@gmail.com", motdepasse: "secret12345" })
+      .expect(400);
+  });
 });
